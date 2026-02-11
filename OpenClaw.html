@@ -3,286 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OPENCLAW // SURVIVAL MONITOR</title>
-    <!-- Koneksi ke Socket.io di VPS -->
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>OpenClaw Agent | Survival Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.9.1/chart.min.js"></script>
     <style>
-        :root { 
-            --bg: #0b0c15; 
-            --panel: #13141f; 
-            --text: #a0a0a0; 
-            --green: #00ff9d; 
-            --red: #ff3366; 
-            --blue: #33ccff; 
-            --yellow: #ffff00;
-        }
-        body { 
-            background: var(--bg); 
-            color: var(--text); 
-            font-family: 'Courier New', monospace; 
-            margin: 0; 
-            padding: 20px; 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            box-sizing: border-box; 
-            overflow: hidden; 
-        }
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
         
-        .header { 
-            display: flex; 
-            justify-content: space-between; 
-            border-bottom: 1px solid #333; 
-            padding-bottom: 15px; 
-            margin-bottom: 20px; 
-            flex-shrink: 0; 
+        :root {
+            --bg-dark: #070707;
+            --panel-bg: #0d0d0d;
+            --border-color: #1a1a1a;
+            --accent-green: #00ff41; /* Terminal Green */
+            --accent-red: #ff3e3e;
         }
-        .badge { 
-            background: #00331a; 
-            color: var(--green); 
-            padding: 5px 12px; 
-            border: 1px solid var(--green); 
-            border-radius: 4px; 
-            font-size: 0.8em; 
-            letter-spacing: 1px;
-            font-weight: bold;
-        }
-        
-        .stats-grid { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 15px; 
-            margin-bottom: 20px; 
-            flex-shrink: 0; 
-        }
-        .card { 
-            background: var(--panel); 
-            padding: 15px; 
-            border-radius: 6px; 
-            border: 1px solid #222; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .card-label { 
-            font-size: 0.7em; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            margin-bottom: 8px; 
-            color: #666; 
-        }
-        .card-value { 
-            font-size: 1.6em; 
-            color: #fff; 
-            font-weight: bold; 
-        }
-        .text-green { color: var(--green); } 
-        .text-red { color: var(--red); }
 
-        .main-grid { 
-            display: grid; 
-            grid-template-columns: 70% 30%; 
-            gap: 20px; 
-            flex: 1; 
-            min-height: 0; 
+        body {
+            background-color: var(--bg-dark);
+            color: #d1d1d1;
+            font-family: 'JetBrains+Mono', monospace;
+            overflow: hidden;
+            letter-spacing: -0.5px;
         }
-        .panel { 
-            background: var(--panel); 
-            border: 1px solid #222; 
-            border-radius: 6px; 
-            padding: 15px; 
-            display: flex; 
-            flex-direction: column; 
-            position: relative; 
-        }
-        .panel-header { 
-            font-size: 0.8em; 
-            margin-bottom: 10px; 
-            color: #555; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            border-bottom: 1px solid #222; 
-            padding-bottom: 5px; 
-        }
-        
-        #log-feed { 
-            flex: 1; 
-            overflow-y: auto; 
-            font-size: 0.8em; 
-            font-family: 'Consolas', 'Monaco', monospace; 
-            padding-right: 5px; 
-        }
-        .log-item { 
-            margin-bottom: 4px; 
-            padding-bottom: 4px; 
-            border-bottom: 1px solid #1a1a1a; 
-            display: flex; 
-            align-items: baseline; 
-        }
-        .log-time { color: #444; margin-right: 8px; font-size: 0.9em; min-width: 65px; }
-        .log-type { font-weight: bold; margin-right: 8px; min-width: 70px; }
-        .log-msg { color: #ccc; word-break: break-word; }
-        
-        .type-DANGER { color: var(--red); } 
-        .type-SUCCESS { color: var(--green); } 
-        .type-AI { color: #bd33ff; }
-        .type-SINYAL { color: var(--yellow); text-shadow: 0 0 5px var(--yellow); }
-        .type-SCANNER { color: var(--blue); }
-        .type-SYSTEM { color: #fff; }
 
-        .chart-container { position: relative; flex: 1; width: 100%; height: 100%; }
+        .glass-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
 
-        /* Scrollbar styling */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        .terminal-scroll::-webkit-scrollbar { width: 3px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: transparent; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #333; }
+
+        .status-pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.4); }
+            70% { opacity: 0.5; box-shadow: 0 0 0 5px rgba(0, 255, 65, 0); }
+            100% { opacity: 1; }
+        }
+
+        .metric-label {
+            color: #444;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .log-entry {
+            font-size: 0.7rem;
+            padding: 1px 0;
+            border-bottom: 1px solid #111;
+        }
+
+        canvas {
+            filter: grayscale(0.2) contrast(1.1);
+        }
+
+        .header-line {
+            height: 1px;
+            background: linear-gradient(90deg, var(--accent-green) 0%, transparent 100%);
+            width: 100px;
+        }
     </style>
 </head>
-<body>
-    <div class="header">
-        <div>
-            <h2 style="margin:0; font-size: 1.1em; letter-spacing: 2px;">OPENCLAW AGENT <span style="color:#333">//</span> <span id="mode-text">INITIALIZING</span></h2>
-        </div>
-        <div class="badge" id="status-badge">WAITING CONNECTION</div>
-    </div>
+<body class="h-screen flex flex-col p-6 space-y-4">
 
-    <div class="stats-grid">
-        <div class="card">
-            <div class="card-label">Current Balance</div>
-            <div class="card-value" id="balance">$0.00</div>
-        </div>
-        <div class="card">
-            <div class="card-label">Net Profit</div>
-            <div class="card-value text-green" id="pnl">+$0.00</div>
-        </div>
-        <div class="card">
-            <div class="card-label">API Usage Cost</div>
-            <div class="card-value text-red" id="api-cost">$0.00</div>
-        </div>
-        <div class="card">
-            <div class="card-label">Active Positions</div>
-            <div class="card-value" id="positions">0</div>
-        </div>
-    </div>
-
-    <div class="main-grid">
-        <div class="panel">
-            <div class="panel-header">Equity Performance (Log Scale)</div>
-            <div class="chart-container">
-                <canvas id="chart"></canvas>
+    <!-- HUD Header -->
+    <header class="flex justify-between items-end border-b border-zinc-900 pb-4">
+        <div class="flex items-center space-x-6">
+            <div>
+                <h1 class="text-sm font-bold tracking-widest text-white">OPENCLAW AGENT</h1>
+                <div class="header-line mt-1"></div>
+            </div>
+            <div class="flex items-center space-x-2 px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-sm">
+                <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">System Status:</span>
+                <span id="mode-badge" class="text-[10px] font-bold text-white uppercase tracking-tighter">WAITING</span>
+                <div class="status-pulse w-1.5 h-1.5 rounded-full bg-green-500"></div>
             </div>
         </div>
-        <div class="panel">
-            <div class="panel-header">Survival Logs</div>
-            <div id="log-feed"></div>
+        
+        <div class="text-right flex flex-col items-end">
+            <span class="text-[10px] text-zinc-600 font-bold uppercase">VPS NODE: 43.167.197.60</span>
+            <span id="clock" class="text-[10px] text-zinc-400">00:00:00 UTC</span>
+        </div>
+    </header>
+
+    <!-- Financial Matrix -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="glass-panel p-4">
+            <p class="metric-label">Net Profit (24h)</p>
+            <div class="flex items-baseline space-x-2">
+                <span id="net-profit" class="text-xl font-bold text-green-500">+$0.00</span>
+                <span class="text-[9px] text-zinc-600">+0.0%</span>
+            </div>
+        </div>
+        <div class="glass-panel p-4 border-l-2 border-l-red-900">
+            <p class="metric-label">API Costs Paid</p>
+            <p id="api-cost" class="text-xl font-bold text-white">$0.00</p>
+        </div>
+        <div class="glass-panel p-4 bg-zinc-900/20">
+            <p class="metric-label">Current Balance</p>
+            <p id="balance" class="text-xl font-bold text-white">$0.00</p>
+            <p class="text-[9px] text-zinc-700">USDC @ POLYGON</p>
+        </div>
+        <div class="glass-panel p-4">
+            <p class="metric-label">Win Rate</p>
+            <p id="win-rate" class="text-xl font-bold text-zinc-400">0.0%</p>
+            <div class="w-full bg-zinc-900 h-1 mt-2">
+                <div id="win-rate-bar" class="bg-zinc-700 h-full w-0 transition-all duration-500"></div>
+            </div>
         </div>
     </div>
 
+    <!-- Data Visualization Area -->
+    <div class="flex-grow grid grid-cols-1 lg:grid-cols-4 gap-4 overflow-hidden">
+        
+        <!-- Balance History -->
+        <div class="lg:col-span-3 glass-panel p-5 flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <span class="metric-label">Balance History (Live Feed)</span>
+                <span id="chart-status" class="text-[9px] text-zinc-700 uppercase tracking-widest font-bold">Scanning Markets...</span>
+            </div>
+            <div class="flex-grow relative overflow-hidden">
+                <canvas id="balanceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- System Log -->
+        <div class="glass-panel p-0 flex flex-col border-zinc-800">
+            <div class="p-3 border-b border-zinc-900 bg-zinc-900/30 flex justify-between items-center">
+                <span class="metric-label">Activity Log</span>
+                <span class="text-[8px] text-zinc-700">AUTO-SCROLL ON</span>
+            </div>
+            <div id="log-container" class="flex-grow overflow-y-auto terminal-scroll p-3 font-mono leading-relaxed">
+                <!-- Data Stream -->
+            </div>
+        </div>
+    </div>
+
+    <!-- System HUD Footer -->
+    <footer class="grid grid-cols-2 md:grid-cols-6 gap-6 pt-4 border-t border-zinc-900">
+        <div>
+            <p class="metric-label mb-1">Runtime</p>
+            <p id="survival-days" class="text-[10px] text-zinc-400 font-bold">17 DAYS ONLINE</p>
+        </div>
+        <div>
+            <p class="metric-label mb-1">Trades</p>
+            <p id="trade-count" class="text-[10px] text-zinc-400 font-bold">0</p>
+        </div>
+        <div>
+            <p class="metric-label mb-1">Markets Scanned</p>
+            <p id="market-count" class="text-[10px] text-zinc-400 font-bold">0</p>
+        </div>
+        <div>
+            <p class="metric-label mb-1">Avg. Edge</p>
+            <p id="avg-edge" class="text-[10px] text-green-900 font-bold">0.0%</p>
+        </div>
+        <div class="md:col-span-2 text-right">
+            <p class="metric-label mb-1">Execution Status</p>
+            <p class="text-[10px] text-zinc-700 font-bold italic tracking-tighter">[*] CONNECTED TO 43.167.197.60:3000</p>
+        </div>
+    </footer>
+
     <script>
-        // Alamat IP VPS Anda
-        const vpsIp = "43.167.197.60";
-        const socket = io(`http://${vpsIp}:3000`);
-        
-        const ctx = document.getElementById('chart').getContext('2d');
-        
-        // Setup Gradient untuk Grafik
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(0, 255, 157, 0.1)');
-        gradient.addColorStop(1, 'rgba(0, 255, 157, 0.0)');
+        // Konfigurasi Koneksi VPS
+        const VPS_IP = "43.167.197.60";
+        const PORT = "3000";
+        // Connect ke server yang menghosting file ini atau paksa ke IP VPS
+        const socket = io(`http://${VPS_IP}:${PORT}`);
 
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: { 
-                labels: [], 
-                datasets: [{ 
-                    label: 'Balance',
-                    data: [], 
-                    borderColor: '#00ff9d', 
-                    borderWidth: 2, 
-                    pointRadius: 0,
-                    backgroundColor: gradient,
-                    fill: true,
-                    tension: 0.4
-                }] 
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { 
-                    x: { display: false }, 
-                    y: { 
-                        grid: { color: '#1a1b26' },
-                        ticks: { color: '#444', font: { size: 10 } }
-                    } 
+        let chart;
+        const maxPoints = 60;
+
+        function initChart() {
+            const ctx = document.getElementById('balanceChart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(0, 255, 65, 0.15)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        borderColor: '#00ff41',
+                        borderWidth: 1.5,
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        borderDash: []
+                    }]
                 },
-                animation: false
-            }
-        });
-
-        function updateUI(state) {
-            document.getElementById('balance').innerText = `$${state.balance.toFixed(2)}`;
-            const pnl = state.netProfit;
-            const pnlEl = document.getElementById('pnl');
-            pnlEl.innerText = `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}`;
-            pnlEl.className = `card-value ${pnl >= 0 ? 'text-green' : 'text-red'}`;
-            
-            document.getElementById('api-cost').innerText = `$${state.apiCostPaid.toFixed(3)}`;
-            document.getElementById('positions').innerText = state.positions ? state.positions.length : 0;
-            document.getElementById('mode-text').innerText = state.mode || 'IDLE';
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { 
+                            grid: { color: '#111', drawBorder: false },
+                            ticks: { 
+                                color: '#333', 
+                                font: { size: 9, family: 'JetBrains Mono' },
+                                callback: value => '$' + value
+                            }
+                        }
+                    },
+                    animation: { duration: 0 }
+                }
+            });
         }
 
         function addLog(log) {
-            const div = document.createElement('div');
-            div.className = 'log-item';
-            div.innerHTML = `
-                <span class="log-time">${log.time}</span>
-                <span class="log-type type-${log.type}">[${log.type}]</span>
-                <span class="log-msg">${log.msg}</span>
-            `;
-            const feed = document.getElementById('log-feed');
-            feed.appendChild(div);
-            feed.scrollTop = feed.scrollHeight;
+            const container = document.getElementById('log-container');
+            const el = document.createElement('div');
+            el.className = 'log-entry';
+            
+            let color = 'text-zinc-600';
+            if (log.type === 'SUCCESS') color = 'text-green-500';
+            if (log.type === 'DANGER' || log.type === 'ERROR') color = 'text-red-500';
+            if (log.type === 'SINYAL') color = 'text-blue-400 font-bold';
+            if (log.type === 'EKSEKUSI') color = 'text-yellow-500';
+
+            el.innerHTML = `<span class="text-zinc-800">[${log.time}]</span> <span class="${color}">${log.msg}</span>`;
+            
+            container.appendChild(el);
+            container.scrollTop = container.scrollHeight;
+            if (container.children.length > 50) container.removeChild(container.firstChild);
         }
 
-        // Socket Events
-        socket.on('connect', () => {
-            document.getElementById('status-badge').innerText = "● SYSTEM ALIVE";
-            document.getElementById('status-badge').style.color = "var(--green)";
-            document.getElementById('status-badge').style.borderColor = "var(--green)";
-        });
-
-        socket.on('disconnect', () => {
-            document.getElementById('status-badge').innerText = "○ SYSTEM OFFLINE";
-            document.getElementById('status-badge').style.color = "var(--red)";
-            document.getElementById('status-badge').style.borderColor = "var(--red)";
-        });
-
-        socket.on('init_state', (state) => {
-            updateUI(state);
-            if (state.logs) {
-                document.getElementById('log-feed').innerHTML = '';
-                state.logs.forEach(addLog);
-            }
-            if (state.history) {
-                chart.data.labels = state.history.map(pt => pt.time);
-                chart.data.datasets[0].data = state.history.map(pt => pt.value);
-                chart.update();
-            }
-        });
-
-        socket.on('new_log', addLog);
-        
-        socket.on('update_stats', (state) => {
-            updateUI(state);
+        function updateUI(state) {
+            document.getElementById('balance').innerText = `$${state.balance.toFixed(2)}`;
+            document.getElementById('api-cost').innerText = `$${state.apiCostPaid.toFixed(2)}`;
+            document.getElementById('net-profit').innerText = `$${state.netProfit >= 0 ? '+' : ''}${state.netProfit.toFixed(2)}`;
+            
+            const badge = document.getElementById('mode-badge');
+            badge.innerText = state.mode || 'ACTIVE';
+            badge.className = `text-[10px] font-bold uppercase tracking-tighter ${state.mode === 'LIVE TRADING' ? 'text-red-500' : 'text-green-400'}`;
+            
+            document.getElementById('trade-count').innerText = state.positions.length;
+            
+            // Push Chart Data
             const now = new Date().toLocaleTimeString();
             chart.data.labels.push(now);
             chart.data.datasets[0].data.push(state.balance);
-            if (chart.data.labels.length > 60) {
+
+            if (chart.data.labels.length > maxPoints) {
                 chart.data.labels.shift();
                 chart.data.datasets[0].data.shift();
             }
             chart.update();
+        }
+
+        // Socket Listeners
+        socket.on('connect', () => {
+            console.log("Connected to OpenClaw Node on VPS");
+            addLog({ time: new Date().toLocaleTimeString(), type: 'SUCCESS', msg: 'CONNECTION ESTABLISHED WITH NODE 43.167.197.60' });
         });
+
+        socket.on('init_state', (state) => {
+            updateUI(state);
+            state.logs.forEach(addLog);
+        });
+
+        socket.on('new_log', addLog);
+        socket.on('update_stats', updateUI);
+
+        // Clock System
+        setInterval(() => {
+            const d = new Date();
+            document.getElementById('clock').innerText = d.getUTCHours().toString().padStart(2, '0') + ":" + 
+                d.getUTCMinutes().toString().padStart(2, '0') + ":" + 
+                d.getUTCSeconds().toString().padStart(2, '0') + " UTC";
+        }, 1000);
+
+        window.onload = initChart;
     </script>
 </body>
 </html>
